@@ -921,8 +921,8 @@ if __name__ == "__main__":
     ║     CLARA - Transaction Analysis System                      ║
     ║     Anti-Smurfing & Anomaly Detection                        ║
     ║                                                               ║
-    ║     API läuft auf: http://localhost:8000                     ║
-    ║     Dokumentation: http://localhost:8000/docs                ║
+    ║     API läuft auf: http://localhost:4002                     ║
+    ║     Dokumentation: http://localhost:4002/docs                ║
     ║                                                               ║
     ╚═══════════════════════════════════════════════════════════════╝
     """)
@@ -930,7 +930,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=4002,
         log_level="info"
     )
 
