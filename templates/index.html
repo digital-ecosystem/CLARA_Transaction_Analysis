@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLARA - Transaction Analysis System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+            transform: scale(1.02);
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 14px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .results-container {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 15px;
+        }
+
+        .results-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat-card.green .stat-value { color: #28a745; }
+        .stat-card.yellow .stat-value { color: #ffc107; }
+        .stat-card.orange .stat-value { color: #fd7e14; }
+        .stat-card.red .stat-value { color: #dc3545; }
+
+        .download-btn {
+            width: 48%;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        .download-btn-container {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-info {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 10px;
+            border: 1px solid #4caf50;
+        }
+
+        .file-info-text {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">CLARA</div>
+            <div class="subtitle">Compliance & AML Risk Analysis</div>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📊</div>
+            <div class="upload-text">CSV-Datei hier ablegen oder klicken</div>
+            <div class="upload-hint">Unterstützte Formate: CSV mit Transaktionsdaten</div>
+            <input type="file" id="fileInput" accept=".csv" />
+        </div>
+
+        <div class="file-info" id="fileInfo">
+            <div class="file-info-text" id="fileInfoText"></div>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="btn" id="analyzeBtn" style="display: none;">Analyse starten</button>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <div class="spinner" id="spinner" style="display: none;"></div>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="results-container" id="resultsContainer">
+            <div class="results-header">Analyse-Ergebnisse</div>
+            <div class="results-stats" id="resultsStats"></div>
+            <div class="download-btn-container">
+                <button class="btn download-btn" id="downloadCsvBtn">
+                    📥 CSV herunterladen
+                </button>
+                <button class="btn download-btn" id="downloadExcelBtn" style="background: #28a745;">
+                    📊 Excel herunterladen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileInfoText = document.getElementById('fileInfoText');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const spinner = document.getElementById('spinner');
+        const statusMessage = document.getElementById('statusMessage');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsStats = document.getElementById('resultsStats');
+        const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+        const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+
+        let selectedFile = null;
+        let analysisResults = null;
+
+        // Drag & Drop Events
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                showStatus('error', 'Bitte wählen Sie eine CSV-Datei aus.');
+                return;
+            }
+
+            selectedFile = file;
+            fileInfo.style.display = 'block';
+            fileInfoText.textContent = `Datei ausgewählt: ${file.name} (${formatFileSize(file.size)})`;
+            analyzeBtn.style.display = 'inline-block';
+            resultsContainer.style.display = 'none';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            analyzeBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            spinner.style.display = 'block';
+            resultsContainer.style.display = 'none';
+            statusMessage.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                updateProgress(10, 'Datei wird hochgeladen...');
+
+                const response = await fetch('/api/analyze/csv-upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                updateProgress(50, 'Analyse läuft...');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                updateProgress(100, 'Analyse abgeschlossen!');
+                
+                setTimeout(() => {
+                    displayResults(result);
+                    analyzeBtn.disabled = false;
+                    spinner.style.display = 'none';
+                }, 500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('error', `Fehler bei der Analyse: ${error.message}`);
+                analyzeBtn.disabled = false;
+                progressContainer.style.display = 'none';
+                spinner.style.display = 'none';
+            }
+        });
+
+        function updateProgress(percent, message) {
+            progressFill.style.width = percent + '%';
+            progressFill.textContent = percent + '%';
+            if (message) {
+                showStatus('info', message);
+            }
+        }
+
+        function showStatus(type, message) {
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.textContent = message;
+            statusMessage.style.display = 'block';
+        }
+
+        function displayResults(result) {
+            analysisResults = result;
+
+            resultsStats.innerHTML = `
+                <div class="stat-card green">
+                    <div class="stat-value">${result.summary.green}</div>
+                    <div class="stat-label">GREEN</div>
+                </div>
+                <div class="stat-card yellow">
+                    <div class="stat-value">${result.summary.yellow}</div>
+                    <div class="stat-label">YELLOW</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-value">${result.summary.orange}</div>
+                    <div class="stat-label">ORANGE</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-value">${result.summary.red}</div>
+                    <div class="stat-label">RED</div>
+                </div>
+            `;
+
+            resultsContainer.style.display = 'block';
+            showStatus('success', `${result.analyzed_customers} Kunden erfolgreich analysiert!`);
+
+            // Set download links
+            if (result.csv_filename) {
+                downloadCsvBtn.onclick = () => {
+                    window.location.href = `/api/download/${result.csv_filename}`;
+                };
+            }
+            
+            if (result.excel_filename) {
+                downloadExcelBtn.onclick = () => {
+                    window.location.href = `/api/download/${result.excel_filename}`;
+                };
+                downloadExcelBtn.style.display = 'inline-block';
+            } else {
+                downloadExcelBtn.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+
